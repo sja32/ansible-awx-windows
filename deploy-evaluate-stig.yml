@@ -1,0 +1,44 @@
+---
+- name: Deploy Evaluate-STIG to ProgramData
+  hosts: all
+  gather_facts: no
+
+  vars:
+    src_share: "\\\\192.168.40.42\\raw-images\\Evaluate-STIG"
+    dest_root: "C:\\ProgramData"
+    dest_path: "{{ dest_root }}\\Evaluate-STIG"
+    robolog: "C:\\Windows\\Temp\\robocopy_Evaluate-STIG.log"
+
+  tasks:
+    - name: Ensure destination root exists
+      ansible.windows.win_file:
+        path: "{{ dest_root }}"
+        state: directory
+
+    - name: (Optional) Add SMB creds for the source share
+      ansible.windows.win_command: >
+        cmdkey /add:192.168.40.42 /user:{{ smb_user }} /pass:{{ smb_pass }}
+      when: smb_user | default('') | length > 0
+      changed_when: false
+
+    - name: Copy Evaluate-STIG with RoboCopy
+      ansible.windows.win_robocopy:
+        src: "{{ src_share }}"
+        dest: "{{ dest_path }}"
+        recurse: yes              # /E
+        purge: no                 # set to yes if you want mirror (/MIR)
+        extra:
+          - "/COPY:DAT"
+          - "/DCOPY:DAT"
+          - "/R:2"
+          - "/W:5"
+          - "/MT:8"
+          - "/NFL"
+          - "/NDL"
+          - "/NP"
+        log: "{{ robolog }}"
+
+    - name: (Optional) Remove temp SMB creds
+      ansible.windows.win_command: cmdkey /delete:192.168.40.42
+      when: smb_user | default('') | length > 0
+      changed_when: false
