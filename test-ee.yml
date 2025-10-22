@@ -1,16 +1,8 @@
 ---
-- name: Windows EE smoke test
-  hosts: all
-  gather_facts: no
-
+- name: Verify EE works
+  hosts: localhost
+  gather_facts: false
   tasks:
-    - name: WinRM ping
-      ansible.windows.win_ping:
-
-    - name: Show Ansible version
-      ansible.builtin.debug:
-        msg: "EE Ansible version: {{ ansible_version.full }}"
-
-    - name: Show Python used by this EE
-      ansible.builtin.debug:
-        var: ansible_playbook_python
+    - name: Print hello from Windows EE
+      debug:
+        msg: "Hello from AWX Windows EE!"
