@@ -1,0 +1,12 @@
+---
+- name: Test Windows connectivity with whoami
+  hosts: windows
+  gather_facts: false
+  tasks:
+    - name: Run whoami on Windows
+      win_command: whoami
+      register: whoami_out
+
+    - name: Show whoami result
+      debug:
+        var: whoami_out.stdout
