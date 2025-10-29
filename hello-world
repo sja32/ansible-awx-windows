@@ -1,0 +1,10 @@
+---
+- name: Hello World Windows Test
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Test WinRM connection
+      ansible.windows.win_ping:
+
+    - name: Say Hello
+      ansible.windows.win_shell: echo "Hello from AWX!"
