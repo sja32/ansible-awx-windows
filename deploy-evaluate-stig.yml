@@ -7,7 +7,7 @@
     src_share: "\\\\192.168.40.42\\raw-images\\Evaluate-STIG"
     dest_root: "C:\\ProgramData"
     dest_path: "{{ dest_root }}\\Evaluate-STIG"
-    timestamp: "{{ lookup('pipe', 'powershell -Command Get-Date -Format yyyyMMdd_HHmmss') }}"
+    timestamp: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
     robolog: "C:\\Windows\\Temp\\robocopy_Evaluate-STIG_{{ timestamp }}.log"
 
   tasks:
@@ -23,25 +23,21 @@
       changed_when: false
 
     - name: Copy Evaluate-STIG with RoboCopy
-      ansible.windows.win_shell: |
-        robocopy "{{ src_share }}" "{{ dest_path }}" /E /COPY:DAT /DCOPY:DAT /R:2 /W:5 /MT:8 /NFL /NDL /NP /LOG:"{{ robolog }}"
-      args:
-        executable: cmd
-      register: robocopy_result
-
-    - name: Display Robocopy summary
-      ansible.builtin.debug:
-        var: robocopy_result.stdout
-
-    - name: Verify Evaluate-STIG copied successfully
-      ansible.windows.win_stat:
-        path: "{{ dest_path }}"
-      register: stig_check
-
-    - name: Display confirmation
-      ansible.builtin.debug:
-        msg: "✅ Evaluate-STIG successfully copied to {{ dest_path }}"
-      when: stig_check.stat.exists
+      ansible.windows.win_robocopy:
+        src: "{{ src_share }}"
+        dest: "{{ dest_path }}"
+        recurse: yes              # /E
+        purge: no                 # Set to yes for /MIR behavior if you want to mirror
+        extra:
+          - "/COPY:DAT"
+          - "/DCOPY:DAT"
+          - "/R:2"
+          - "/W:5"
+          - "/MT:8"
+          - "/NFL"
+          - "/NDL"
+          - "/NP"
+        log: "{{ robolog }}"
 
     - name: (Optional) Remove temp SMB creds
       ansible.windows.win_command: cmdkey /delete:192.168.40.42
