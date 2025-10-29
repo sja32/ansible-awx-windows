@@ -23,7 +23,7 @@
       changed_when: false
 
     - name: Copy Evaluate-STIG with RoboCopy
-      ansible.windows.win_robocopy:
+      community.windows.win_robocopy:
         src: "{{ src_share }}"
         dest: "{{ dest_path }}"
         recurse: yes              # /E
