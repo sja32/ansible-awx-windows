@@ -5,41 +5,36 @@
 
   vars:
     src_share: "\\\\192.168.40.42\\raw-images\\Evaluate-STIG"
-    dest_root: "C:\\ProgramData"
-    dest_path: "{{ dest_root }}\\Evaluate-STIG"
-    timestamp: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
-    robolog: "C:\\Windows\\Temp\\robocopy_Evaluate-STIG_{{ timestamp }}.log"
+    dest_path: "C:\\ProgramData\\Evaluate-STIG"
+    smb_user: "allensj"
+    smb_pass: "Luasi965!"
 
   tasks:
-    - name: Ensure destination root exists
+    - name: Ensure destination path exists
       ansible.windows.win_file:
-        path: "{{ dest_root }}"
+        path: "{{ dest_path }}"
         state: directory
 
-    - name: (Optional) Add SMB creds for the source share
-      ansible.windows.win_command: >
-        cmdkey /add:192.168.40.42 /user:{{ smb_user }} /pass:{{ smb_pass }}
-      when: smb_user | default('') | length > 0
-      changed_when: false
+    - name: Copy Evaluate-STIG using PowerShell Copy-Item
+      ansible.windows.win_powershell:
+        script: |
+          $Source = "{{ src_share }}"
+          $Destination = "{{ dest_path }}"
+          $Username = "{{ smb_user }}"
+          $Password = "{{ smb_pass }}" | ConvertTo-SecureString -AsPlainText -Force
+          $Cred = New-Object System.Management.Automation.PSCredential($Username, $Password)
 
-    - name: Copy Evaluate-STIG with RoboCopy
-      community.windows.win_robocopy:
-        src: "{{ src_share }}"
-        dest: "{{ dest_path }}"
-        recurse: yes              # /E
-        purge: no                 # Set to yes for /MIR behavior if you want to mirror
-        extra:
-          - "/COPY:DAT"
-          - "/DCOPY:DAT"
-          - "/R:2"
-          - "/W:5"
-          - "/MT:8"
-          - "/NFL"
-          - "/NDL"
-          - "/NP"
-        log: "{{ robolog }}"
+          # Map temporary drive to access the share
+          New-PSDrive -Name "Z" -PSProvider FileSystem -Root $Source -Credential $Cred -ErrorAction Stop | Out-Null
 
-    - name: (Optional) Remove temp SMB creds
-      ansible.windows.win_command: cmdkey /delete:192.168.40.42
-      when: smb_user | default('') | length > 0
-      changed_when: false
+          # Perform copy
+          Copy-Item -Path "Z:\*" -Destination $Destination -Recurse -Force -ErrorAction Stop
+
+          # Remove temporary mapping
+          Remove-PSDrive -Name "Z" -Force -ErrorAction SilentlyContinue
+      register: copy_result
+      ignore_errors: false
+
+    - name: Display copy result
+      ansible.builtin.debug:
+        var: copy_result
