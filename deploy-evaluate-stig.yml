@@ -6,8 +6,8 @@
   vars:
     src_share: "\\\\192.168.40.42\\raw-images\\Evaluate-STIG"
     dest_path: "C:\\ProgramData\\Evaluate-STIG"
-    smb_user: "allensj"
-    smb_pass: "Luasi965!"
+    smb_user: "{{ smb_user }}"
+    smb_pass: "{{ smb_pass }}"
 
   tasks:
     - name: Ensure destination path exists
