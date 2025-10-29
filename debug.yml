@@ -1,0 +1,9 @@
+- name: Verify Environment
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Print WinRM transport and cert validation
+      ansible.builtin.debug:
+        msg:
+          - "Transport: {{ lookup('env', 'ANSIBLE_WINRM_TRANSPORT') }}"
+          - "Cert Validation: {{ lookup('env', 'ANSIBLE_WINRM_SERVER_CERT_VALIDATION') }}"
