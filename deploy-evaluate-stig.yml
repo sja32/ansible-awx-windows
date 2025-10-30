@@ -14,6 +14,7 @@
       ansible.windows.win_file:
         path: "{{ dest_path }}"
         state: directory
+        
     # ✅ Debug block to confirm SMB variables are injected
     - name: Debug SMB vars
       debug:
