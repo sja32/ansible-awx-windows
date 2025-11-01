@@ -1,0 +1,34 @@
+---
+- name: Verify Windows EE module resolution
+  hosts: windows
+  gather_facts: no
+
+  collections:
+    - ansible.windows
+
+  tasks:
+
+    - name: Verify EE Python version
+      command: python3 --version
+      register: py_version
+      changed_when: false
+    - debug:
+        msg: "Python version inside EE: {{ py_version.stdout }}"
+
+    - name: Display effective collection paths
+      debug:
+        var: ansible_collections_paths
+
+    - name: Verify win_ping module
+      win_ping:
+
+    - name: Test win_file (create test folder)
+      win_file:
+        path: C:\Temp\EE_Test
+        state: directory
+
+    - name: Verify win_shell execution
+      win_shell: |
+        echo "AWX EE Test" > C:\Temp\EE_Test\test.txt
+      args:
+        chdir: C:\Temp\EE_Test
